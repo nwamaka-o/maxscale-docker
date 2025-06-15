@@ -10,21 +10,22 @@ This script connects to a MariaDB MaxScale instance and performs the following q
 2. Retrieves all zipcodes where the state is Kentucky (KY).
 3. Retrieves all zipcodes between 40000 and 41000.
 4. Retrieves the TotalWages column where the state is Pennsylvania (PA).
+It repeats the same queries for the 'zipcodes_two' table if available.
 """
 
 import mysql.connector
 
-# Connection configuration
+# Connection configuration for MaxScale
 config = {
     'host': '127.0.0.1',
-    'port': 4006,  # MaxScale read-write listener port
+    'port': 4006,
     'user': 'maxuser',
-    'password': 'maxpwd',
-    'database': 'zipcodes_one'
+    'password': 'maxpwd'
 }
 
-def query_and_print(cursor, description, sql):
-    print(f"\n--- {description} ---")
+def query_and_print(cursor, db, description, sql):
+    print(f"\n--- {description} ({db}) ---")
+    cursor.execute(f"USE {db}")
     cursor.execute(sql)
     results = cursor.fetchall()
     for row in results:
@@ -35,21 +36,22 @@ def main():
         conn = mysql.connector.connect(**config)
         cursor = conn.cursor()
 
-        # 1. Largest zipcode in zipcodes_one
-        query_and_print(cursor, "Largest zipcode in zipcodes_one",
-                        "SELECT MAX(zipcode) FROM zipcodes_one")
+        for db in ['zipcodes_one', 'zipcodes_two']:
+            # 1. Largest zipcode
+            query_and_print(cursor, db, "Largest zipcode",
+                            f"SELECT MAX(Zipcode) FROM {db}")
 
-        # 2. All zipcodes where state = KY
-        query_and_print(cursor, "All zipcodes where state = 'KY'",
-                        "SELECT * FROM zipcodes_one WHERE state = 'KY'")
+            # 2. All zipcodes where state = KY
+            query_and_print(cursor, db, "All zipcodes where state = 'KY'",
+                            f"SELECT * FROM {db} WHERE State = 'KY'")
 
-        # 3. All zipcodes between 40000 and 41000
-        query_and_print(cursor, "Zipcodes between 40000 and 41000",
-                        "SELECT * FROM zipcodes_one WHERE zipcode BETWEEN 40000 AND 41000")
+            # 3. All zipcodes between 40000 and 41000
+            query_and_print(cursor, db, "Zipcodes between 40000 and 41000",
+                            f"SELECT * FROM {db} WHERE Zipcode BETWEEN 40000 AND 41000")
 
-        # 4. TotalWages where state = PA
-        query_and_print(cursor, "TotalWages where state = 'PA'",
-                        "SELECT TotalWages FROM zipcodes_one WHERE state = 'PA'")
+            # 4. TotalWages where state = PA
+            query_and_print(cursor, db, "TotalWages where state = 'PA'",
+                            f"SELECT TotalWages FROM {db} WHERE State = 'PA'")
 
     except mysql.connector.Error as err:
         print("Error:", err)
