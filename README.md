@@ -135,9 +135,9 @@ maxscale-docker/
     ├── requirements.txt
     ├── sql/
     │   ├── master1/
-    │   │   └── init.sql
+    │   │   └── shard1.sql
     │   └── master2/
-    │       └── init.sql
+    │       └── shard2.sql
 ```
 
 ### Sample SQL Schema (`init.sql`)
